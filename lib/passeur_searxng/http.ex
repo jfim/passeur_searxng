@@ -19,8 +19,8 @@ defmodule PasseurSearxng.HTTP do
           {:error, _} -> {:error, "SearXNG returned invalid JSON"}
         end
 
-      {:ok, %Finch.Response{status: status}} ->
-        {:error, "SearXNG returned HTTP #{status}"}
+      {:ok, %Finch.Response{status: status, body: body}} ->
+        {:error, "SearXNG returned HTTP #{status}#{body_snippet(body)}"}
 
       {:error, %Mint.TransportError{reason: :timeout}} ->
         {:error, "Request timed out"}
@@ -28,7 +28,16 @@ defmodule PasseurSearxng.HTTP do
       {:error, reason} ->
         {:error, "Request failed: #{inspect(reason)}"}
     end
+  rescue
+    e -> {:error, "Request raised #{inspect(e.__struct__)}: #{Exception.message(e)}"}
   end
+
+  defp body_snippet(body) when is_binary(body) do
+    trimmed = body |> String.trim() |> String.slice(0, 200)
+    if trimmed == "", do: "", else: ": #{trimmed}"
+  end
+
+  defp body_snippet(_), do: ""
 
   defp build_url(base, []), do: base
 

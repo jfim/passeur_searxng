@@ -23,14 +23,27 @@ defmodule PasseurSearxng.Tools.WebSearch do
 
     task = Task.async(fn -> do_search(query, params) end)
 
-    result =
+    response =
       case Task.yield(task, @overall_timeout_ms) || Task.shutdown(task, :brutal_kill) do
-        {:ok, {:ok, text}} -> text
-        {:ok, {:error, reason}} -> "Error: #{reason}"
-        nil -> "Error: Operation timed out after #{@overall_timeout_ms}ms"
+        {:ok, {:ok, text}} ->
+          Anubis.Server.Response.tool() |> Anubis.Server.Response.text(text)
+
+        {:ok, {:error, reason}} ->
+          Logger.warning("SearXNG search failed: #{reason}")
+          Anubis.Server.Response.tool() |> Anubis.Server.Response.error(reason)
+
+        {:exit, reason} ->
+          msg = "SearXNG search crashed: #{inspect(reason)}"
+          Logger.error(msg)
+          Anubis.Server.Response.tool() |> Anubis.Server.Response.error(msg)
+
+        nil ->
+          msg = "Operation timed out after #{@overall_timeout_ms}ms"
+          Logger.warning(msg)
+          Anubis.Server.Response.tool() |> Anubis.Server.Response.error(msg)
       end
 
-    {:reply, Anubis.Server.Response.tool() |> Anubis.Server.Response.text(result), frame}
+    {:reply, response, frame}
   end
 
   defp do_search(query, params) do
@@ -40,7 +53,8 @@ defmodule PasseurSearxng.Tools.WebSearch do
       {:ok, format_results(decoded, query, Map.get(params, :response_format, "markdown"))}
     end
   rescue
-    e -> {:error, Exception.message(e)}
+    e ->
+      {:error, "#{inspect(e.__struct__)}: #{Exception.message(e)}"}
   end
 
   defp searxng_base do
