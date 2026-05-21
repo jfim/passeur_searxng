@@ -82,5 +82,5 @@ defmodule PasseurSearxng.Tools.WebSearchInfo do
   end
 
   defp format_list([]), do: "_(none)_"
-  defp format_list(items), do: items |> Enum.map(&"- #{&1}") |> Enum.join("\n")
+  defp format_list(items), do: Enum.map_join(items, "\n", &"- #{&1}")
 end

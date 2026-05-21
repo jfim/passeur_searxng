@@ -93,9 +93,7 @@ defmodule PasseurSearxng.Tools.WebSearch do
           "\n_No results._\n"
 
         list ->
-          list
-          |> Enum.map(&format_result/1)
-          |> Enum.join("\n")
+          Enum.map_join(list, "\n", &format_result/1)
       end
 
     header <> "\n" <> body

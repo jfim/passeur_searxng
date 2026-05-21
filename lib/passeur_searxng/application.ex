@@ -1,4 +1,5 @@
 defmodule PasseurSearxng.Application do
+  @moduledoc false
   use Application
 
   @impl true
