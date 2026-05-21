@@ -37,8 +37,6 @@ defmodule PasseurSearxng.HTTP do
     if trimmed == "", do: "", else: ": #{trimmed}"
   end
 
-  defp body_snippet(_), do: ""
-
   defp build_url(base, []), do: base
 
   defp build_url(base, params) do
